@@ -3,10 +3,138 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Dashboard - Proyecto Final</title>
+    <title>Dashboard PSM BDH Ecuador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   </head>
-  <body>
-    <h1>Dashboard - Proyecto Final de Políticas Públicas</h1>
-    <p>Coloque aquí la app que desplegaremos en Vercel (Next.js, SvelteKit, o estático).</p>
+  <body class="bg-slate-50 text-slate-900">
+    <div class="min-h-screen p-6 lg:p-10">
+      <header class="mb-8">
+        <h1 class="text-4xl font-semibold text-slate-900">Dashboard de evaluación PSM - BDH Ecuador</h1>
+        <p class="mt-3 max-w-3xl text-slate-600">
+          Interfaz de visualización para el análisis de Propensity Score Matching (PSM) aplicado al Bono de Desarrollo Humano. Esta vista presenta el soporte común del puntaje de propensión y la comparación de ingresos antes y después del emparejamiento.
+        </p>
+      </header>
+
+      <section class="grid gap-6 lg:grid-cols-2">
+        <article class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h2 class="text-2xl font-semibold text-slate-900">Distribución del Propensity Score</h2>
+          <p class="mt-2 text-slate-600 text-sm">
+            Gráfico de densidad que muestra el soporte común entre los grupos tratados y de control. El soporte común es clave para garantizar la comparabilidad de los emparejamientos.
+          </p>
+          <div class="mt-5">
+            <canvas id="psmDensityChart" aria-label="Distribución del puntaje de propensión"></canvas>
+          </div>
+        </article>
+
+        <article class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h2 class="text-2xl font-semibold text-slate-900">Comparación de ingresos</h2>
+          <p class="mt-2 text-slate-600 text-sm">
+            Comparación de ingresos promedio antes y después del emparejamiento. Este gráfico ayuda a evaluar la estabilidad del contrafactual y la calidad del emparejamiento.
+          </p>
+          <div class="mt-5">
+            <canvas id="incomeComparisonChart" aria-label="Comparación de ingresos antes y después del emparejamiento"></canvas>
+          </div>
+        </article>
+      </section>
+
+      <section class="mt-10 grid gap-6 lg:grid-cols-2">
+        <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h3 class="text-xl font-semibold text-slate-900">Notas metodológicas</h3>
+          <p class="mt-3 text-slate-600 text-sm leading-7">
+            Para garantizar el rigor del PSM, esta interfaz usa métricas de soporte común y balance de covariables. El modelo de propensión debe estimarse únicamente con variables previas al tratamiento BDH, evitando cualquier covariable post-tratamiento.
+          </p>
+        </div>
+
+        <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h3 class="text-xl font-semibold text-slate-900">Uso de la interfaz</h3>
+          <ul class="mt-3 space-y-2 text-slate-600 text-sm leading-7 list-disc list-inside">
+            <li>Reemplace los datos de ejemplo por los microdatos de ENEMDU o el dataset simulado.</li>
+            <li>Verifique el soporte común antes de interpretar los resultados del ATT.</li>
+            <li>Consulte el reporte metodológico en `src/analysis/psm_bdh_report.md`.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const densityCtx = document.getElementById('psmDensityChart');
+      new Chart(densityCtx, {
+        type: 'line',
+        data: {
+          labels: ['0.05', '0.15', '0.25', '0.35', '0.45', '0.55', '0.65', '0.75', '0.85', '0.95'],
+          datasets: [
+            {
+              label: 'Tratados',
+              data: [8, 15, 22, 28, 30, 24, 18, 10, 6, 2],
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37, 99, 235, 0.2)',
+              fill: true,
+              tension: 0.35,
+              pointRadius: 0
+            },
+            {
+              label: 'Controles',
+              data: [2, 6, 12, 24, 34, 30, 20, 12, 8, 4],
+              borderColor: '#16a34a',
+              backgroundColor: 'rgba(22, 163, 74, 0.2)',
+              fill: true,
+              tension: 0.35,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            title: {
+              display: true,
+              text: 'Distribución del puntaje de propensión (Soporte Común)'
+            }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Propensity Score' } },
+            y: { title: { display: true, text: 'Densidad estimada' } }
+          }
+        }
+      });
+
+      const incomeCtx = document.getElementById('incomeComparisonChart');
+      new Chart(incomeCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Ingresos antes', 'Ingresos después'],
+          datasets: [
+            {
+              label: 'Tratados',
+              data: [420, 430],
+              backgroundColor: '#2563eb'
+            },
+            {
+              label: 'Controles emparejados',
+              data: [415, 425],
+              backgroundColor: '#16a34a'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            title: {
+              display: true,
+              text: 'Comparación de ingresos antes y después del emparejamiento'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Ingreso promedio' }
+            }
+          }
+        }
+      });
+    </script>
   </body>
 </html>
