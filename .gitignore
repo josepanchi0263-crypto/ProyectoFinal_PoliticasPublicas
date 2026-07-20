@@ -1,0 +1,17 @@
+# Archivos de datos pesados (ENEMDU, etc.)
+data/
+*.csv
+*.xlsx
+*.sav
+*.dta
+
+# Archivos temporales de código
+__pycache__/
+*.pyc
+.Rhistory
+.RData
+
+# Entornos virtuales
+.venv/
+venv/
+env/
