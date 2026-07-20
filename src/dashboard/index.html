@@ -203,13 +203,17 @@
             datasets: [
               {
                 label: 'Tratados',
-                data: [beforeIncome.treated, afterIncome.treated],
-                backgroundColor: '#2563eb'
+                // Valores solicitados por el usuario (USD)
+                data: [48.50, 63.80],
+                backgroundColor: '#2563eb',
+                borderRadius: 6
               },
               {
                 label: 'Contrafactual emparejado',
-                data: [beforeIncome.controls, afterIncome.matchedControls],
-                backgroundColor: '#16a34a'
+                // Valores solicitados por el usuario (USD)
+                data: [112.00, 52.10],
+                backgroundColor: '#16a34a',
+                borderRadius: 6
               }
             ]
           },
@@ -217,9 +221,25 @@
             responsive: true,
             plugins: {
               legend: { position: 'top' },
-              title: { display: true, text: 'Comparación de ingresos antes y después del emparejamiento' }
+              title: { display: true, text: 'Comparación de ingresos antes y después del emparejamiento' },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)} USD`
+                }
+              }
             },
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Ingreso per cápita USD' } } }
+            scales: {
+              y: {
+                beginAtZero: true,
+                min: 0,
+                max: 150,
+                title: { display: true, text: 'Ingreso per cápita (USD)' },
+                ticks: {
+                  callback: (value) => `${value}`
+                }
+              }
+            },
+            interaction: { mode: 'index', intersect: false }
           }
         });
       };
