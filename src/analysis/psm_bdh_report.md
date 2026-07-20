@@ -38,9 +38,70 @@ La estimación del propensity score se realiza mediante una regresión logístic
 
 \[ \text{logit}(P(T_i=1 \mid X_i)) = \alpha + X_i'\beta + \varepsilon_i \]
 
-Este modelo permite estimar la probabilidad condicional de recibir el BDH para cada registro.
+Donde la función logit se define como:
 
-### 3.3 Soporte común y emparejamiento
+\[ \text{logit}(p) = \ln\left(\frac{p}{1-p}\right) \]
+
+La probabilidad condicional para cada unidad se obtiene a partir de:
+
+\[ p(X_i) = \frac{\exp(\alpha + X_i'\beta)}{1 + \exp(\alpha + X_i'\beta)} \]
+
+En el contexto del BDH, un vector típico de covariables \(X_i\) puede incluir:
+
+- `Jefe_Mujer`: indicador de género del jefe de hogar.
+- `Anios_Escolaridad`: años de educación del jefe de hogar.
+- `Num_Hijos`: número de menores en el hogar.
+- `Area_Rural`: indicador de residencia rural.
+- `Puntaje_Registro_Social`: puntaje socioeconómico de elegibilidad.
+
+La estimación de \(\alpha\) y \(\beta\) se realiza por máxima verosimilitud. El algoritmo de optimización puede ser iterativo, por ejemplo usando iteratively reweighted least squares (IRLS) o descenso de gradiente, para encontrar los parámetros que maximizan la probabilidad de los tratamientos observados.
+
+### 3.3 Especificación econométrica del logit
+
+La fórmula operacional que se utiliza en el modelo logit es:
+
+\[ \ln\left(\frac{P(T_i=1\mid X_i)}{1-P(T_i=1\mid X_i)}\right) = \beta_0 + \beta_1 Jefe\_Mujer_i + \beta_2 Anios\_Escolaridad_i + \beta_3 Num\_Hijos_i + \beta_4 Area\_Rural_i + \beta_5 Puntaje\_Registro\_Social_i \]
+
+Los coeficientes estimados \(\beta_j\) capturan el efecto marginal de cada covariable sobre la probabilidad de recibir el BDH. Una vez estimados, los puntajes de propensión se usan como variable de emparejamiento entre tratados y controles.
+
+### 3.4 Soporte común y emparejamiento
+
+El soporte común o overlap es el rango de valores del puntaje de propensión en el que existen tanto unidades tratadas como controles. Formalmente, el soporte común se define como:
+
+\[ \{x: 0 < P(T=1\mid X=x) < 1\} \]
+
+Para el análisis, se procede en tres pasos:
+
+1. Estimar el puntaje de propensión para cada observación.
+2. Identificar el rango compartido de puntajes entre grupos tratados y de control.
+3. Excluir observaciones fuera del soporte común para evitar extrapolaciones no sustentadas.
+
+### 3.5 Algoritmo de emparejamiento: Nearest Neighbor
+
+El emparejamiento nearest neighbor selecciona para cada unidad tratada el control más cercano en términos absolutos de puntaje de propensión. El algoritmo básico es:
+
+1. Calcular el puntaje de propensión \(p(X_i)\) para todas las unidades.
+2. Dividir los datos en tratados \((T=1)\) y controles \((T=0)\).
+3. Para cada tratado, buscar el control \(j\) que minimice \(|p(X_i) - p(X_j)|\).
+4. Asignar el control seleccionado como contrafactual del tratado.
+
+El resultado es un conjunto emparejado que preserva la comparabilidad observable. Si se emplea matching con reemplazo, un control puede aparecer como contrafactual de múltiples tratados; si se usa sin reemplazo, cada control se asigna una sola vez.
+
+### 3.6 Supuesto de soporte común en la práctica
+
+Para validar el soporte común se recomienda graficar la densidad de los puntajes de propensión por grupo y comparar los rangos extremos. Un soporte común estrecho o inexistente indica que los resultados pueden estar basados en extrapolación y deben interpretarse con cautela.
+
+### 3.7 Balance de covariables
+
+Después del emparejamiento, se deben comparar las medias y las diferencias estandarizadas de las covariables entre tratados y controles emparejados. El objetivo es reducir las diferencias observadas y aproximar la condición de equilibrio del experimento.
+
+### 3.8 Cálculo del ATT
+
+El efecto promedio del tratamiento sobre los tratados (ATT) se calcula como:
+
+\[ ATT = \frac{1}{N_1} \sum_{i:T_i=1} \left(Y_i - Y_{j(i)}\right) \]
+
+donde \(Y_i\) es el resultado observado del tratado y \(Y_{j(i)}\) es el resultado del control emparejado.
 
 El soporte común o overlap es el conjunto de valores del puntaje de propensión donde existen tanto unidades tratadas como de control. El procedimiento incluye:
 

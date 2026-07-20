@@ -12,7 +12,7 @@
       <header class="mb-8">
         <h1 class="text-4xl font-semibold text-slate-900">Dashboard de evaluación PSM - BDH Ecuador</h1>
         <p class="mt-3 max-w-3xl text-slate-600">
-          Interfaz de visualización para el análisis de Propensity Score Matching (PSM) aplicado al Bono de Desarrollo Humano. Esta vista presenta el soporte común del puntaje de propensión y la comparación de ingresos antes y después del emparejamiento.
+          Interfaz de visualización para el análisis de Propensity Score Matching (PSM) aplicado al Bono de Desarrollo Humano. Esta vista presenta el soporte común del puntaje de propensión estimado y la comparación de ingresos antes y después del emparejamiento.
         </p>
       </header>
 
@@ -20,7 +20,7 @@
         <article class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <h2 class="text-2xl font-semibold text-slate-900">Distribución del Propensity Score</h2>
           <p class="mt-2 text-slate-600 text-sm">
-            Gráfico de densidad que muestra el soporte común entre los grupos tratados y de control. El soporte común es clave para garantizar la comparabilidad de los emparejamientos.
+            Gráfico de densidad construido a partir del puntaje de propensión estimado con variables observables previas al tratamiento. El soporte común identifica el rango de puntajes donde conviven tratados y controles.
           </p>
           <div class="mt-5">
             <canvas id="psmDensityChart" aria-label="Distribución del puntaje de propensión"></canvas>
@@ -30,7 +30,7 @@
         <article class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <h2 class="text-2xl font-semibold text-slate-900">Comparación de ingresos</h2>
           <p class="mt-2 text-slate-600 text-sm">
-            Comparación de ingresos promedio antes y después del emparejamiento. Este gráfico ayuda a evaluar la estabilidad del contrafactual y la calidad del emparejamiento.
+            Comparación de ingresos promedio antes y después del emparejamiento. Este gráfico ilustra la reducción de brechas y el contrafactual construido con nearest neighbor matching.
           </p>
           <div class="mt-5">
             <canvas id="incomeComparisonChart" aria-label="Comparación de ingresos antes y después del emparejamiento"></canvas>
@@ -42,98 +42,189 @@
         <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <h3 class="text-xl font-semibold text-slate-900">Notas metodológicas</h3>
           <p class="mt-3 text-slate-600 text-sm leading-7">
-            Para garantizar el rigor del PSM, esta interfaz usa métricas de soporte común y balance de covariables. El modelo de propensión debe estimarse únicamente con variables previas al tratamiento BDH, evitando cualquier covariable post-tratamiento.
+            El cálculo del Propensity Score se realiza con una especificación de regresión logística utilizando covariables previas al tratamiento. El emparejamiento se define según nearest neighbor para construir un contrafactual de control comparable.
           </p>
         </div>
 
         <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h3 class="text-xl font-semibold text-slate-900">Uso de la interfaz</h3>
-          <ul class="mt-3 space-y-2 text-slate-600 text-sm leading-7 list-disc list-inside">
-            <li>Reemplace los datos de ejemplo por los microdatos de ENEMDU o el dataset simulado.</li>
-            <li>Verifique el soporte común antes de interpretar los resultados del ATT.</li>
-            <li>Consulte el reporte metodológico en `src/analysis/psm_bdh_report.md`.</li>
-          </ul>
+          <h3 class="text-xl font-semibold text-slate-900">Generación de datos</h3>
+          <p class="mt-3 text-slate-600 text-sm leading-7">
+            Los datos se cargan desde `src/dashboard/data.json`, generado a partir del archivo simulado `data/Dataset_BDH_Simulado.xlsx`. Esto permite usar datos reales en la visualización sin dependencia de servicios externos.
+          </p>
         </div>
       </section>
     </div>
 
     <script>
-      const densityCtx = document.getElementById('psmDensityChart');
-      new Chart(densityCtx, {
-        type: 'line',
-        data: {
-          labels: ['0.05', '0.15', '0.25', '0.35', '0.45', '0.55', '0.65', '0.75', '0.85', '0.95'],
-          datasets: [
-            {
-              label: 'Tratados',
-              data: [8, 15, 22, 28, 30, 24, 18, 10, 6, 2],
-              borderColor: '#2563eb',
-              backgroundColor: 'rgba(37, 99, 235, 0.2)',
-              fill: true,
-              tension: 0.35,
-              pointRadius: 0
-            },
-            {
-              label: 'Controles',
-              data: [2, 6, 12, 24, 34, 30, 20, 12, 8, 4],
-              borderColor: '#16a34a',
-              backgroundColor: 'rgba(22, 163, 74, 0.2)',
-              fill: true,
-              tension: 0.35,
-              pointRadius: 0
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            title: {
-              display: true,
-              text: 'Distribución del puntaje de propensión (Soporte Común)'
-            }
-          },
-          scales: {
-            x: { title: { display: true, text: 'Propensity Score' } },
-            y: { title: { display: true, text: 'Densidad estimada' } }
-          }
-        }
-      });
+      const sigmoid = x => 1 / (1 + Math.exp(-x));
 
-      const incomeCtx = document.getElementById('incomeComparisonChart');
-      new Chart(incomeCtx, {
-        type: 'bar',
-        data: {
-          labels: ['Ingresos antes', 'Ingresos después'],
-          datasets: [
-            {
-              label: 'Tratados',
-              data: [420, 430],
-              backgroundColor: '#2563eb'
-            },
-            {
-              label: 'Controles emparejados',
-              data: [415, 425],
-              backgroundColor: '#16a34a'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            title: {
-              display: true,
-              text: 'Comparación de ingresos antes y después del emparejamiento'
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: 'Ingreso promedio' }
+      const buildDesignMatrix = (data) => data.map(row => [
+        1,
+        row.Jefe_Mujer,
+        row.Anios_Escolaridad,
+        row.Num_Hijos,
+        row.Area_Rural,
+        row.Puntaje_Registro_Social
+      ]);
+
+      const fitLogit = (X, y, iterations = 1000, lr = 0.1) => {
+        const n = X.length;
+        const k = X[0].length;
+        let beta = Array(k).fill(0);
+
+        for (let iter = 0; iter < iterations; iter += 1) {
+          const preds = X.map((row, i) => sigmoid(row.reduce((sum, xj, j) => sum + xj * beta[j], 0)));
+          const gradient = Array(k).fill(0);
+          for (let i = 0; i < n; i += 1) {
+            const error = y[i] - preds[i];
+            for (let j = 0; j < k; j += 1) {
+              gradient[j] += error * X[i][j];
             }
           }
+          for (let j = 0; j < k; j += 1) {
+            beta[j] += lr * gradient[j] / n;
+          }
         }
+        return beta;
+      };
+
+      const computePropensity = (row, beta) => sigmoid(
+        beta[0]
+        + beta[1] * row.Jefe_Mujer
+        + beta[2] * row.Anios_Escolaridad
+        + beta[3] * row.Num_Hijos
+        + beta[4] * row.Area_Rural
+        + beta[5] * row.Puntaje_Registro_Social
+      );
+
+      const nearestNeighborMatch = (treated, controls) => {
+        return treated.map(tr => {
+          let best = null;
+          let bestDist = Infinity;
+          controls.forEach(ctrl => {
+            const dist = Math.abs(tr.propensity_score - ctrl.propensity_score);
+            if (dist < bestDist) {
+              bestDist = dist;
+              best = ctrl;
+            }
+          });
+          return {
+            treated: tr,
+            control: best,
+            distance: bestDist
+          };
+        });
+      };
+
+      const histogram = (values, bins = 20, min = 0, max = 1) => {
+        const width = (max - min) / bins;
+        const counts = Array(bins).fill(0);
+        values.forEach(v => {
+          const index = Math.min(bins - 1, Math.max(0, Math.floor((v - min) / width)));
+          counts[index] += 1;
+        });
+        return counts.map((count, i) => ({ x: min + width * (i + 0.5), y: count / values.length }));
+      };
+
+      const loadData = async () => {
+        const response = await fetch('data.json');
+        const data = await response.json();
+        return data.filter(row => row.Recibe_BDH !== null && row.Ingreso_Per_Capita_USD !== null);
+      };
+
+      const renderCharts = async () => {
+        const rawData = await loadData();
+        const X = buildDesignMatrix(rawData);
+        const y = rawData.map(row => row.Recibe_BDH);
+        const beta = fitLogit(X, y, 800, 0.2);
+        rawData.forEach(row => {
+          row.propensity_score = computePropensity(row, beta);
+        });
+
+        const treated = rawData.filter(row => row.Recibe_BDH === 1);
+        const controls = rawData.filter(row => row.Recibe_BDH === 0);
+        const matched = nearestNeighborMatch(treated, controls);
+
+        const treatedScores = treated.map(r => r.propensity_score);
+        const controlScores = controls.map(r => r.propensity_score);
+        const treatedHist = histogram(treatedScores, 20);
+        const controlHist = histogram(controlScores, 20);
+
+        const bins = treatedHist.map(b => b.x.toFixed(2));
+        new Chart(document.getElementById('psmDensityChart'), {
+          type: 'line',
+          data: {
+            labels: bins,
+            datasets: [
+              {
+                label: 'Tratados',
+                data: treatedHist.map(b => b.y),
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.25)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2
+              },
+              {
+                label: 'Controles',
+                data: controlHist.map(b => b.y),
+                borderColor: '#16a34a',
+                backgroundColor: 'rgba(22, 163, 74, 0.25)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'top' },
+              title: { display: true, text: 'Distribución del puntaje de propensión (Soporte Común)' }
+            },
+            scales: { x: { title: { display: true, text: 'Propensity Score' } }, y: { title: { display: true, text: 'Densidad relativa' } } }
+          }
+        });
+
+        const beforeIncome = {
+          treated: treated.reduce((sum, r) => sum + r.Ingreso_Per_Capita_USD, 0) / treated.length,
+          controls: controls.reduce((sum, r) => sum + r.Ingreso_Per_Capita_USD, 0) / controls.length
+        };
+        const afterIncome = {
+          treated: treated.reduce((sum, r) => sum + r.Ingreso_Per_Capita_USD, 0) / treated.length,
+          matchedControls: matched.reduce((sum, pair) => sum + pair.control.Ingreso_Per_Capita_USD, 0) / matched.length
+        };
+
+        new Chart(document.getElementById('incomeComparisonChart'), {
+          type: 'bar',
+          data: {
+            labels: ['Antes del emparejamiento', 'Después del emparejamiento'],
+            datasets: [
+              {
+                label: 'Tratados',
+                data: [beforeIncome.treated, afterIncome.treated],
+                backgroundColor: '#2563eb'
+              },
+              {
+                label: 'Contrafactual emparejado',
+                data: [beforeIncome.controls, afterIncome.matchedControls],
+                backgroundColor: '#16a34a'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'top' },
+              title: { display: true, text: 'Comparación de ingresos antes y después del emparejamiento' }
+            },
+            scales: { y: { beginAtZero: true, title: { display: true, text: 'Ingreso per cápita USD' } } }
+          }
+        });
+      };
+
+      renderCharts().catch(error => {
+        console.error('Error al cargar datos o renderizar gráficos:', error);
       });
     </script>
   </body>

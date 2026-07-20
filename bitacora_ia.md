@@ -24,3 +24,8 @@ Ejemplo inicial:
 - Actor: Coordinador / Programación / Datos / Especialista
 - Decisión / Comentario: Generar README raíz completo con referencias oficiales de ENEMDU y Registro Social/MIES; crear dashboard interactivo en `src/dashboard/index.html` con Tailwind y Chart.js para la visualización de soporte común y comparación de ingresos pre/post emparejamiento.
 - Referencia: `README.md`, `src/dashboard/index.html`
+
+- Fecha: 2026-07-20
+- Actor: Programación / Datos / Especialista / Crítico
+- Decisión / Comentario: Crear exportador `src/dashboard/export_data_json.ps1` para convertir `data/Dataset_BDH_Simulado.xlsx` en `src/dashboard/data.json`; actualizar el dashboard para estimar el Propensity Score con un modelo logit y emparejar por nearest neighbor con datos reales.
+- Referencia: `src/dashboard/export_data_json.ps1`, `src/dashboard/index.html`, `src/analysis/psm_bdh_report.md`
