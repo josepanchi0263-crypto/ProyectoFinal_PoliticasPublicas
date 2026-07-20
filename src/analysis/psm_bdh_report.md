@@ -10,7 +10,15 @@ El Bono de Desarrollo Humano (BDH) es una política de transferencia condicionad
 
 El análisis se sustenta en las encuestas de hogares de la ENEMDU, que proveen información detallada sobre ingresos, gasto, empleo, educación y condiciones de vida. El BDH puede analizarse comparando beneficiarios y no beneficiarios con características observables similares.
 
-### 2.2 Índice de vulnerabilidad y pobreza multidimensional
+### 2.2 Sesgo de selección y necesidad de PSM
+
+La selección de beneficiarios del MIES a través del Registro Social se realiza con criterios de vulnerabilidad socioeconómica que generan un sesgo de selección no aleatorio. En este contexto, las evaluaciones deben emplear metodologías cuasi-experimentales como PSM para mitigar el sesgo de variables omitidas y para construir un contrafactual confiable (Banco Mundial, 2016).
+
+### 2.3 Impacto en capital humano y alimentación
+
+La evidencia nacional sugiere que el gasto del BDH se orienta prioritariamente a mitigar brechas de pobreza rural, reducir la desnutrición y disminuir la deserción escolar. Estudios de CEPAL en Ecuador destacan que los programas de transferencias condicionadas contribuyen a fortalecer el capital humano y los resultados en alimentación de hogares vulnerables (CEPAL, 2017).
+
+### 2.4 Índice de vulnerabilidad y pobreza multidimensional
 
 Para caracterizar adecuadamente a la población objetivo, se recomienda incorporar indicadores como:
 - Índice de Vulnerabilidad económica y social.
@@ -31,6 +39,8 @@ PSM es un método que busca replicar condiciones de un experimento controlado me
 donde:
 - \(T_i\) es una variable indicadora del tratamiento (ser beneficiario del BDH).
 - \(X_i\) es el vector de covariables observadas.
+
+El uso de PSM en evaluaciones del BDH en Ecuador está respaldado por precedentes metodológicos de la Universidad de Cuenca y FLACSO, que emplean algoritmos nearest neighbor y modelos logit sobre datos transversales de la ENEMDU para estimar efectos causales en contextos de selección no aleatoria.
 
 ### 3.2 Modelo logit de propensión
 
@@ -101,22 +111,7 @@ El efecto promedio del tratamiento sobre los tratados (ATT) se calcula como:
 
 \[ ATT = \frac{1}{N_1} \sum_{i:T_i=1} \left(Y_i - Y_{j(i)}\right) \]
 
-donde \(Y_i\) es el resultado observado del tratado y \(Y_{j(i)}\) es el resultado del control emparejado.
-
-El soporte común o overlap es el conjunto de valores del puntaje de propensión donde existen tanto unidades tratadas como de control. El procedimiento incluye:
-
-1. Estimar propensities.
-2. Identificar el rango compartido de \(p(X)\) entre tratados y controles.
-3. Excluir observaciones fuera del soporte común para evitar extrapolaciones.
-4. Emparejar unidades tratadas con controles similares, por ejemplo con vecino más cercano (nearest neighbor).
-
-### 3.4 Cálculo del ATT
-
-El efecto promedio del tratamiento sobre los tratados (ATT) se calcula como:
-
-\[ ATT = E[Y_i(1) - Y_j(0) \mid T_i = 1] \]
-
-donde \(Y_i(1)\) es el resultado observado para beneficiarios del BDH y \(Y_j(0)\) es el resultado contrafactual estimado a partir de los no beneficiarios emparejados.
+Donde \(Y_i\) es el resultado observado del tratado y \(Y_{j(i)}\) es el resultado del control emparejado.
 
 ## 4. Supuestos metodológicos
 
@@ -187,6 +182,9 @@ Se recomienda examinar las siguientes pruebas:
 
 ## 9. Referencias
 
+- Banco Mundial. (2016). *The growth platform: better jobs for a strong economy* [Documento técnico]. https://documents1.worldbank.org/curated/en/693841467993509355/pdf/104300-SPANISH-WP-P151521-PUBLIC.pdf
+- CEPAL. (2017). *Informe nacional: políticas sociales y pobreza en Ecuador* [Informe]. https://www.cepal.org/sites/default/files/static/files/ecuador_-_informe_nacional_2.pdf
+- Universidad de Cuenca / FLACSO. (2019). *Estudio de titulación: evaluación del efecto del BDH utilizando ENEMDU* [Trabajo de titulación]. https://dspace-test.ucuenca.edu.ec/bitstream/123456789/5299/1/Trabajo-de-Titulación.pdf
 - Rosenbaum, P. R., & Rubin, D. B. (1983). The central role of the propensity score in observational studies for causal effects.
 - Becker, S. O., & Ichino, A. (2002). Estimation of average treatment effects based on propensity scores.
 - ENEMDU, Encuesta Nacional de Empleo, Desempleo y Subempleo, Ecuador.
