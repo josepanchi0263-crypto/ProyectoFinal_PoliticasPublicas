@@ -36,6 +36,12 @@ Para la ejecución de evaluaciones reales utilizando este flujo de Propensity Sc
 - Consulte `src/analysis/psm_bdh_report.md` para la justificación metodológica y los supuestos de PSM.
 - Abra `src/dashboard/index.html` para revisar visualizaciones de soporte común y comparación de ingresos antes y después del emparejamiento.
 
+## Visualización: Gráfico de soporte común
+
+Distribución del puntaje de propensión (soporte común) estimada para el conjunto simulado. La imagen fue generada desde la interfaz en `src/dashboard/index.html`.
+
+![Distribución del puntaje de propensión](src/dashboard/psm_density.png)
+
 ## Metodología y rigor
 
 El enfoque PSM aquí planteado busca emparejar beneficiarios del BDH con no beneficiarios que tengan probabilidades de tratamiento similares, condicionadas a covariables previas al programa. Esto reduce el sesgo por selección observada y permite una estimación más confiable del impacto del BDH sobre pobreza monetaria e ingresos.
