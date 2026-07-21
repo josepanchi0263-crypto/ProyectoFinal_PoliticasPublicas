@@ -187,4 +187,8 @@ Se recomienda examinar las siguientes pruebas:
 - Universidad de Cuenca / FLACSO. (2019). *Estudio de titulación: evaluación del efecto del BDH utilizando ENEMDU* [Trabajo de titulación]. https://dspace-test.ucuenca.edu.ec/bitstream/123456789/5299/1/Trabajo-de-Titulación.pdf
 - Rosenbaum, P. R., & Rubin, D. B. (1983). The central role of the propensity score in observational studies for causal effects.
 - Becker, S. O., & Ichino, A. (2002). Estimation of average treatment effects based on propensity scores.
+- Schady, N., & Rosero, J. (2008). Are cash transfers spent differently than other income? Hard evidence from Ecuador. Journal of Development Economics, 87(2), 246-253. DOI: https://doi.org/10.1016/j.jdeveco.2007.12.002
+- Ponce, J., & Bedi, A. S. (2010). The impact of a cash transfer program on cognitive achievement: The Bono de Desarrollo Humano of Ecuador. Economics of Education Review, 29(1), 116-125. DOI: https://doi.org/10.1016/j.econedurev.2009.07.005
+- Araujo, M. C., Bosch, M., & Schady, N. (2018). Can Cash Transfers Help Households Cope with Shocks? Evidence from Ecuador. World Bank Economic Review, 32(3), 609-626. DOI: https://doi.org/10.1093/wber/lhx009
+- Instituto Nacional de Estadística y Censos (INEC). (2024). Reporte de Pobreza y Desigualdad por Ingresos - ENEMDU 2024. Quito, Ecuador.
 - ENEMDU, Encuesta Nacional de Empleo, Desempleo y Subempleo, Ecuador.
