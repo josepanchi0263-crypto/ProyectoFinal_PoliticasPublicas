@@ -1,4 +1,4 @@
-"""Exporta datos desde el archivo Excel simulado a JSON para el dashboard.
+"""Exporta datos desde el archivo Excel de datos reales a JSON para el dashboard.
 
 Uso:
     python export_data_json.py
@@ -10,13 +10,12 @@ import json
 from pathlib import Path
 import pandas as pd
 
-INPUT_PATH = Path(__file__).resolve().parents[2] / 'data' / 'Dataset_BDH_Simulado.xlsx'
-OUTPUT_PATH = Path(__file__).resolve().parent / 'data.json'
+INPUT_PATH = Path(__file__).resolve().parents[2] / 'data' / 'datos_reales_psm.xlsx'
+OUTPUT_PATH = Path(__file__).resolve().parent / 'datos_reales_psm.json'
 
 
 def load_excel_data(path: Path) -> pd.DataFrame:
-    sheet_name = 'Datos_Simulados_ENEMDU'
-    return pd.read_excel(path, sheet_name=sheet_name, engine='openpyxl')
+    return pd.read_excel(path, sheet_name=0, engine='openpyxl')
 
 
 def export_to_json(df: pd.DataFrame, output_path: Path) -> None:

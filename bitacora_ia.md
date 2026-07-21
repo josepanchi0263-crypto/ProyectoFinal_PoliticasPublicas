@@ -27,5 +27,5 @@ Ejemplo inicial:
 
 - Fecha: 2026-07-20
 - Actor: Programación / Datos / Especialista / Crítico
-- Decisión / Comentario: Crear exportador `src/dashboard/export_data_json.ps1` para convertir `data/Dataset_BDH_Simulado.xlsx` en `src/dashboard/data.json`; actualizar el dashboard para estimar el Propensity Score con un modelo logit y emparejar por nearest neighbor con datos reales.
+- Decisión / Comentario: Crear exportador `src/dashboard/export_data_json.ps1` para convertir `data/datos_reales_psm.xlsx` en `src/dashboard/datos_reales_psm.json`; actualizar el dashboard para estimar el Propensity Score con un modelo logit y emparejar por nearest neighbor con datos reales.
 - Referencia: `src/dashboard/export_data_json.ps1`, `src/dashboard/index.html`, `src/analysis/psm_bdh_report.md`

@@ -1,5 +1,5 @@
 ﻿Add-Type -AssemblyName System.IO.Compression.FileSystem
-$zip = [System.IO.Compression.ZipFile]::OpenRead('data/Dataset_BDH_Simulado.xlsx')
+$zip = [System.IO.Compression.ZipFile]::OpenRead('data/datos_reales_psm.xlsx')
 $entry = $zip.GetEntry('xl/worksheets/sheet2.xml')
 $reader = New-Object System.IO.StreamReader($entry.Open())
 $xml = [xml]$reader.ReadToEnd()

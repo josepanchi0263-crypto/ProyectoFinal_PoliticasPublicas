@@ -1,7 +1,7 @@
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-$inputPath = (Resolve-Path '..\..\data\Dataset_BDH_Simulado.xlsx').Path
-$outputPath = Join-Path (Get-Location) 'data.json'
+$inputPath = (Resolve-Path '..\..\data\datos_reales_psm.xlsx').Path
+$outputPath = Join-Path (Get-Location) 'datos_reales_psm.json'
 
 $zip = [System.IO.Compression.ZipFile]::OpenRead($inputPath)
 $entry = $zip.GetEntry('xl/worksheets/sheet2.xml')

@@ -47,9 +47,9 @@
         </div>
 
         <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h3 class="text-xl font-semibold text-slate-900">Generación de datos</h3>
+          <h3 class="text-xl font-semibold text-slate-900">Fuentes de datos y procesamiento econométrico</h3>
           <p class="mt-3 text-slate-600 text-sm leading-7">
-            Los datos se cargan desde `src/dashboard/data.json`, generado a partir del archivo simulado `data/Dataset_BDH_Simulado.xlsx`. Esto permite usar datos reales en la visualización sin dependencia de servicios externos.
+            Los datos se cargan desde `src/dashboard/datos_reales_psm.json`, generado a partir del procesamiento empírico de la Encuesta Nacional de Empleo, Desempleo y Subempleo (ENEMDU 2024) del INEC. La estimación del Propensity Score (Logit) y el emparejamiento por Vecino Más Cercano se realizan mediante scripts econométricos en Python.
           </p>
         </div>
       </section>
@@ -127,7 +127,7 @@
       };
 
       const loadData = async () => {
-        const response = await fetch('data.json');
+        const response = await fetch('datos_reales_psm.json');
         const data = await response.json();
         return data.filter(row => row.Recibe_BDH !== null && row.Ingreso_Per_Capita_USD !== null);
       };

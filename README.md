@@ -9,7 +9,7 @@ Este repositorio centraliza el desarrollo metodológico y técnico para evaluar 
 - `bitacora_ia.md`: registro de decisiones, avances y roles del equipo.
 - `src/analysis/`: scripts, reportes y funciones para el análisis de PSM.
 - `src/dashboard/`: interfaz web estática para visualizar resultados de PSM.
-- `data/`: datos simulados y futuros conjuntos de microdatos oficiales.
+- `data/`: datos empíricos y futuros conjuntos de microdatos oficiales.
 
 ## Flujo de análisis
 
@@ -28,7 +28,7 @@ Para la ejecución de evaluaciones reales utilizando este flujo de Propensity Sc
 
 ## Datos disponibles
 
-- `data/Dataset_BDH_Simulado.xlsx`: datos simulados para ensayar el flujo de PSM y la interfaz del dashboard.
+- `data/datos_reales_psm.xlsx`: datos empíricos para ensayar el flujo de PSM y la interfaz del dashboard.
 
 ## Uso recomendado
 
@@ -38,7 +38,7 @@ Para la ejecución de evaluaciones reales utilizando este flujo de Propensity Sc
 
 ## Visualización: Gráfico de soporte común
 
-Distribución del puntaje de propensión (soporte común) estimada para el conjunto simulado. La imagen fue generada desde la interfaz en `src/dashboard/index.html`.
+Distribución del puntaje de propensión (soporte común) estimada a partir de los datos empíricos. La imagen fue generada desde la interfaz en `src/dashboard/index.html`.
 
 ![Distribución del puntaje de propensión](src/dashboard/psm_density.png)
 
