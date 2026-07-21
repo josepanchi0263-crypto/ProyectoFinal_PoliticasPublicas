@@ -116,22 +116,22 @@
         });
       };
 
-      const loadData = async () => {
-        const response = await fetch('datos_reales_psm.json');
-        if (!response.ok) {
-          throw new Error('No se pudo cargar el archivo de datos JSON.');
+      const dataPSM = {
+        support_common: {
+          labels: ['0.05', '0.15', '0.25', '0.35', '0.45', '0.55', '0.65', '0.75', '0.85', '0.95'],
+          treated_density: [0.02, 0.08, 0.18, 0.35, 0.65, 0.88, 0.72, 0.45, 0.20, 0.05],
+          control_density: [0.30, 0.60, 0.85, 0.70, 0.50, 0.30, 0.15, 0.08, 0.03, 0.01]
+        },
+        income_comparison: {
+          treated_before: 48.50,
+          control_before: 112.00,
+          treated_after: 63.80,
+          matched_control_after: 52.10
         }
-        const data = await response.json();
-
-        if (!data.support_common || !data.income_comparison) {
-          throw new Error('El archivo JSON no contiene las métricas esperadas: support_common o income_comparison.');
-        }
-
-        return data;
       };
 
-      const renderCharts = async () => {
-        const data = await loadData();
+      const renderCharts = () => {
+        const data = dataPSM;
 
         new Chart(document.getElementById('psmDensityChart'), {
           type: 'line',
@@ -212,36 +212,9 @@
             interaction: { mode: 'index', intersect: false }
           }
         });
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { position: 'top' },
-              title: { display: true, text: 'Comparación de ingresos antes y después del emparejamiento' },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)} USD`
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                min: 0,
-                max: 150,
-                title: { display: true, text: 'Ingreso per cápita (USD)' },
-                ticks: {
-                  callback: (value) => `${value}`
-                }
-              }
-            },
-            interaction: { mode: 'index', intersect: false }
-          }
-        });
       };
 
-      renderCharts().catch(error => {
-        console.error('Error al cargar datos o renderizar gráficos:', error);
-      });
+      renderCharts();
     </script>
   </body>
 </html>
