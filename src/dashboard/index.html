@@ -128,6 +128,9 @@
 
       const loadData = async () => {
         const response = await fetch('datos_reales_psm.json');
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el archivo de datos JSON.');
+        }
         const data = await response.json();
         return data.filter(row => row.Recibe_BDH !== null && row.Ingreso_Per_Capita_USD !== null);
       };

@@ -3,6 +3,8 @@ Flujo de análisis para Propensity Score Matching (PSM) del Bono de Desarrollo H
 
 Dependencias recomendadas: pandas, numpy, matplotlib, seaborn, statsmodels, sklearn
 """
+import json
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -116,6 +118,14 @@ def run_psm_workflow(data_path, treatment_var, outcome_var, covariates, caliper=
         'balance_before': balance_before,
         'balance_after': balance_after
     }
+
+def export_matched_data_to_dashboard(df, output_filename='datos_reales_psm.json'):
+    """Exporta los datos procesados para que el dashboard los lea desde src/dashboard/."""
+    json_filename = os.path.join('..', 'dashboard', output_filename)
+    json_path = os.path.join(os.path.dirname(__file__), json_filename)
+    df.to_json(json_path, orient='records', force_ascii=False, indent=4)
+    print(f"✅ '{output_filename}' generado exitosamente en: {json_path}")
+
 
 if __name__ == '__main__':
     print('Este módulo contiene funciones para ejecutar un flujo de Propensity Score Matching (PSM).')
