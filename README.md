@@ -24,11 +24,11 @@ Este repositorio centraliza el desarrollo metodológico y técnico para evaluar 
 ## 📊 Fuentes de Datos Originales y Metadatos
 Para la ejecución de evaluaciones reales utilizando este flujo de Propensity Score Matching (PSM), se deben emplear los microdatos oficiales provistos por las instituciones gubernamentales del Ecuador:
 * **Encuesta Nacional de Empleo, Desempleo y Subempleo (ENEMDU):** Instituto Nacional de Estadística y Censos (INEC). Contenido: Microdatos a nivel de hogar y personas, ingresos monetarios, escolaridad, características de la vivienda y condición de actividad. Acceso Oficial: https://www.ecuadorencifras.gob.ec/estadisticas-laborales-enemdu/
-* **Registro de Social y Puntaje de Vulnerabilidad (Contextual):** Unidad del Registro Social / MIES.
+* **Registro de Social y Puntaje de Vulnerabilidad (Contextual):** Unidad del Registro Social / MIES. Contenido: Criterios de elegibilidad basados en el índice de bienestar socioeconómico.
 
 ## Datos disponibles
 
-- `data/datos_reales_psm.xlsx`: datos empíricos para ensayar el flujo de PSM y la interfaz del dashboard.
+- `data/Dataset_BDH_Simulado.xlsx`: datos empíricos simulados para ensayar el flujo de PSM y la interfaz del dashboard.
 
 ## Uso recomendado
 

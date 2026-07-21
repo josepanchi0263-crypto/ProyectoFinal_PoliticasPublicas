@@ -29,3 +29,8 @@ Ejemplo inicial:
 - Actor: Programación / Datos / Especialista / Crítico
 - Decisión / Comentario: Crear exportador `src/dashboard/export_data_json.ps1` para convertir `data/datos_reales_psm.xlsx` en `src/dashboard/datos_reales_psm.json`; actualizar el dashboard para estimar el Propensity Score con un modelo logit y emparejar por nearest neighbor con datos reales.
 - Referencia: `src/dashboard/export_data_json.ps1`, `src/dashboard/index.html`, `src/analysis/psm_bdh_report.md`
+
+- Fecha: 2026-07-20
+- Actor: Coordinador / Programación / Datos / Especialista
+- Decisión / Comentario: Finalizar la documentación del proyecto con README raíz completo, actualizar la interfaz del dashboard interactivo en `src/dashboard/index.html`, y generar bitácora con referencias metodológicas y fuentes oficiales de ENEMDU e INEC.
+- Referencia: `README.md`, `src/dashboard/index.html`, `bitacora_ia.md`

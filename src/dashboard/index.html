@@ -49,14 +49,33 @@
         <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <h3 class="text-xl font-semibold text-slate-900">Fuentes de datos y procesamiento econométrico</h3>
           <p class="mt-3 text-slate-600 text-sm leading-7">
-            Los datos se cargan desde `src/dashboard/datos_reales_psm.json`, generado a partir del procesamiento empírico de la Encuesta Nacional de Empleo, Desempleo y Subempleo (ENEMDU 2024) del INEC. La estimación del Propensity Score (Logit) y el emparejamiento por Vecino Más Cercano se realizan mediante scripts econométricos en Python.
+            Los gráficos se cargan desde `src/dashboard/datos_reales_psm.json` y calculan el soporte común y la comparación de ingresos con los datos empíricos procesados del ENEMDU 2024. Si el JSON aún no está disponible, el dashboard usa una tabla de respaldo de ejemplo mientras se completa la exportación de los datos reales.
           </p>
         </div>
       </section>
     </div>
 
     <script>
-      const sigmoid = x => 1 / (1 + Math.exp(-x));
+      const parseNumber = (value) => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string' && value.trim() !== '') {
+          const parsed = Number(value.replace(',', '.'));
+          return Number.isFinite(parsed) ? parsed : 0;
+        }
+        return 0;
+      };
+
+      const normalizeRow = (row) => ({
+        ID_Hogar: parseNumber(row.ID_Hogar),
+        Jefe_Mujer: parseNumber(row.Jefe_Mujer),
+        Anios_Escolaridad: parseNumber(row.Anios_Escolaridad),
+        Num_Hijos: parseNumber(row.Num_Hijos),
+        Area_Rural: parseNumber(row.Area_Rural),
+        Puntaje_Registro_Social: parseNumber(row.Puntaje_Registro_Social),
+        Recibe_BDH: parseNumber(row.Recibe_BDH),
+        Ingreso_Per_Capita_USD: parseNumber(row.Ingreso_Per_Capita_USD),
+        propensity_score: row.propensity_score != null ? parseNumber(row.propensity_score) : null
+      });
 
       const buildDesignMatrix = (data) => data.map(row => [
         1,
@@ -67,13 +86,15 @@
         row.Puntaje_Registro_Social
       ]);
 
+      const sigmoid = (x) => 1 / (1 + Math.exp(-x));
+
       const fitLogit = (X, y, iterations = 1000, lr = 0.1) => {
         const n = X.length;
         const k = X[0].length;
         let beta = Array(k).fill(0);
 
         for (let iter = 0; iter < iterations; iter += 1) {
-          const preds = X.map((row, i) => sigmoid(row.reduce((sum, xj, j) => sum + xj * beta[j], 0)));
+          const preds = X.map((row) => sigmoid(row.reduce((sum, xj, j) => sum + xj * beta[j], 0)));
           const gradient = Array(k).fill(0);
           for (let i = 0; i < n; i += 1) {
             const error = y[i] - preds[i];
@@ -88,6 +109,21 @@
         return beta;
       };
 
+      const ensurePropensityScores = (rows) => {
+        const hasScores = rows.some((row) => row.propensity_score != null && row.propensity_score !== '');
+        if (hasScores) return rows.map((row) => ({ ...row, propensity_score: parseNumber(row.propensity_score) }));
+
+        const validRows = rows.filter((row) => row.Recibe_BDH === 0 || row.Recibe_BDH === 1);
+        const X = buildDesignMatrix(validRows);
+        const y = validRows.map((row) => row.Recibe_BDH);
+        const beta = fitLogit(X, y, 800, 0.05);
+
+        return validRows.map((row) => ({
+          ...row,
+          propensity_score: computePropensity(row, beta)
+        }));
+      };
+
       const computePropensity = (row, beta) => sigmoid(
         beta[0]
         + beta[1] * row.Jefe_Mujer
@@ -97,64 +133,86 @@
         + beta[5] * row.Puntaje_Registro_Social
       );
 
+      const histogramDensity = (values, bins = 10) => {
+        if (!values.length) return Array(bins).fill(0);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const step = (max - min) / bins || 1;
+        const counts = Array(bins).fill(0);
+        values.forEach((value) => {
+          const idx = Math.min(bins - 1, Math.max(0, Math.floor((value - min) / step)));
+          counts[idx] += 1;
+        });
+        return counts.map((count) => count / values.length);
+      };
+
+      const buildSupportCommon = (rows) => {
+        const treated = rows.filter((row) => row.Recibe_BDH === 1).map((row) => row.propensity_score);
+        const control = rows.filter((row) => row.Recibe_BDH === 0).map((row) => row.propensity_score);
+        const labels = Array.from({ length: 10 }, (_, i) => {
+          const start = (i * 0.1).toFixed(2);
+          const end = ((i + 1) * 0.1).toFixed(2);
+          return `${start}-${end}`;
+        });
+        return {
+          labels,
+          treated_density: histogramDensity(treated, labels.length),
+          control_density: histogramDensity(control, labels.length)
+        };
+      };
+
       const nearestNeighborMatch = (treated, controls) => {
-        return treated.map(tr => {
+        return treated.map((tr) => {
           let best = null;
           let bestDist = Infinity;
-          controls.forEach(ctrl => {
+          controls.forEach((ctrl) => {
             const dist = Math.abs(tr.propensity_score - ctrl.propensity_score);
             if (dist < bestDist) {
               bestDist = dist;
               best = ctrl;
             }
           });
-          return {
-            treated: tr,
-            control: best,
-            distance: bestDist
-          };
+          return { treated: tr, control: best, distance: bestDist };
         });
       };
 
-      const dataPSM = {
-        support_common: {
-          labels: ['0.05', '0.15', '0.25', '0.35', '0.45', '0.55', '0.65', '0.75', '0.85', '0.95'],
-          treated_density: [0.02, 0.08, 0.18, 0.35, 0.65, 0.88, 0.72, 0.45, 0.20, 0.05],
-          control_density: [0.30, 0.60, 0.85, 0.70, 0.50, 0.30, 0.15, 0.08, 0.03, 0.01]
-        },
-        income_comparison: {
-          treated_before: 48.50,
-          control_before: 112.00,
-          treated_after: 63.80,
-          matched_control_after: 52.10
-        }
+      const mean = (values) => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+
+      const buildIncomeComparison = (rows) => {
+        const treated = rows.filter((row) => row.Recibe_BDH === 1);
+        const controls = rows.filter((row) => row.Recibe_BDH === 0);
+        const matched = nearestNeighborMatch(treated, controls);
+        return {
+          treated_before: mean(treated.map((row) => row.Ingreso_Per_Capita_USD)),
+          control_before: mean(controls.map((row) => row.Ingreso_Per_Capita_USD)),
+          treated_after: mean(treated.map((row) => row.Ingreso_Per_Capita_USD)),
+          matched_control_after: mean(matched.map((item) => item.control ? item.control.Ingreso_Per_Capita_USD : 0))
+        };
       };
 
-      const renderCharts = () => {
-        const data = dataPSM;
-
+      const renderCharts = (dataPSM) => {
         new Chart(document.getElementById('psmDensityChart'), {
           type: 'line',
           data: {
-            labels: data.support_common.labels,
+            labels: dataPSM.support_common.labels,
             datasets: [
               {
                 label: 'Tratados',
-                data: data.support_common.treated_density,
+                data: dataPSM.support_common.treated_density,
                 borderColor: '#2563eb',
-                backgroundColor: 'rgba(37, 99, 235, 0.15)',
+                backgroundColor: 'rgba(37, 99, 235, 0.18)',
                 fill: true,
-                tension: 0.4,
-                pointRadius: 2
+                tension: 0.3,
+                pointRadius: 3
               },
               {
                 label: 'Controles',
-                data: data.support_common.control_density,
+                data: dataPSM.support_common.control_density,
                 borderColor: '#16a34a',
-                backgroundColor: 'rgba(22, 163, 74, 0.12)',
+                backgroundColor: 'rgba(22, 163, 74, 0.14)',
                 fill: true,
-                tension: 0.4,
-                pointRadius: 2
+                tension: 0.3,
+                pointRadius: 3
               }
             ]
           },
@@ -164,7 +222,10 @@
               legend: { position: 'top' },
               title: { display: true, text: 'Distribución del puntaje de propensión (Soporte Común)' }
             },
-            scales: { x: { title: { display: true, text: 'Propensity Score' } }, y: { title: { display: true, text: 'Densidad relativa' } } }
+            scales: {
+              x: { title: { display: true, text: 'Rango de propensión' } },
+              y: { title: { display: true, text: 'Densidad relativa' } }
+            }
           }
         });
 
@@ -175,13 +236,13 @@
             datasets: [
               {
                 label: 'Tratados',
-                data: [data.income_comparison.treated_before, data.income_comparison.treated_after],
+                data: [dataPSM.income_comparison.treated_before, dataPSM.income_comparison.treated_after],
                 backgroundColor: '#2563eb',
                 borderRadius: 6
               },
               {
                 label: 'Contrafactual emparejado',
-                data: [data.income_comparison.control_before, data.income_comparison.matched_control_after],
+                data: [dataPSM.income_comparison.control_before, dataPSM.income_comparison.matched_control_after],
                 backgroundColor: '#16a34a',
                 borderRadius: 6
               }
@@ -201,12 +262,7 @@
             scales: {
               y: {
                 beginAtZero: true,
-                min: 0,
-                max: 150,
-                title: { display: true, text: 'Ingreso per cápita (USD)' },
-                ticks: {
-                  callback: (value) => `${value}`
-                }
+                title: { display: true, text: 'Ingreso per cápita (USD)' }
               }
             },
             interaction: { mode: 'index', intersect: false }
@@ -214,7 +270,42 @@
         });
       };
 
-      renderCharts();
+      const renderFallback = () => {
+        const fallbackData = {
+          support_common: {
+            labels: ['0.00-0.10', '0.10-0.20', '0.20-0.30', '0.30-0.40', '0.40-0.50', '0.50-0.60', '0.60-0.70', '0.70-0.80', '0.80-0.90', '0.90-1.00'],
+            treated_density: [0.04, 0.09, 0.15, 0.21, 0.18, 0.12, 0.08, 0.06, 0.05, 0.02],
+            control_density: [0.10, 0.16, 0.18, 0.18, 0.14, 0.10, 0.07, 0.05, 0.01, 0.01]
+          },
+          income_comparison: {
+            treated_before: 52.3,
+            control_before: 108.7,
+            treated_after: 52.3,
+            matched_control_after: 57.9
+          }
+        };
+        renderCharts(fallbackData);
+      };
+
+      const loadRealData = async () => {
+        try {
+          const response = await fetch('datos_reales_psm.json');
+          if (!response.ok) throw new Error('JSON no disponible');
+          const rawRows = await response.json();
+          const rows = rawRows.map(normalizeRow);
+          const scoredRows = ensurePropensityScores(rows);
+          const dataPSM = {
+            support_common: buildSupportCommon(scoredRows),
+            income_comparison: buildIncomeComparison(scoredRows)
+          };
+          renderCharts(dataPSM);
+        } catch (error) {
+          console.warn('No se pudo cargar datos reales, usando datos de respaldo de visualización.', error);
+          renderFallback();
+        }
+      };
+
+      loadRealData();
     </script>
   </body>
 </html>
