@@ -116,71 +116,31 @@
         });
       };
 
-      const fallbackData = [
-        { Recibe_BDH: 1, Ingreso_Per_Capita_USD: 48.5, Jefe_Mujer: 1, Anios_Escolaridad: 4, Num_Hijos: 3, Area_Rural: 1, Puntaje_Registro_Social: 42 },
-        { Recibe_BDH: 1, Ingreso_Per_Capita_USD: 52.0, Jefe_Mujer: 0, Anios_Escolaridad: 6, Num_Hijos: 2, Area_Rural: 0, Puntaje_Registro_Social: 38 },
-        { Recibe_BDH: 1, Ingreso_Per_Capita_USD: 47.2, Jefe_Mujer: 1, Anios_Escolaridad: 3, Num_Hijos: 4, Area_Rural: 1, Puntaje_Registro_Social: 45 },
-        { Recibe_BDH: 1, Ingreso_Per_Capita_USD: 55.1, Jefe_Mujer: 0, Anios_Escolaridad: 5, Num_Hijos: 1, Area_Rural: 0, Puntaje_Registro_Social: 40 },
-        { Recibe_BDH: 1, Ingreso_Per_Capita_USD: 60.8, Jefe_Mujer: 1, Anios_Escolaridad: 7, Num_Hijos: 2, Area_Rural: 1, Puntaje_Registro_Social: 35 },
-        { Recibe_BDH: 0, Ingreso_Per_Capita_USD: 112.0, Jefe_Mujer: 0, Anios_Escolaridad: 10, Num_Hijos: 1, Area_Rural: 0, Puntaje_Registro_Social: 60 },
-        { Recibe_BDH: 0, Ingreso_Per_Capita_USD: 115.3, Jefe_Mujer: 1, Anios_Escolaridad: 9, Num_Hijos: 1, Area_Rural: 0, Puntaje_Registro_Social: 62 },
-        { Recibe_BDH: 0, Ingreso_Per_Capita_USD: 105.4, Jefe_Mujer: 0, Anios_Escolaridad: 8, Num_Hijos: 0, Area_Rural: 0, Puntaje_Registro_Social: 58 },
-        { Recibe_BDH: 0, Ingreso_Per_Capita_USD: 118.7, Jefe_Mujer: 1, Anios_Escolaridad: 11, Num_Hijos: 2, Area_Rural: 0, Puntaje_Registro_Social: 65 },
-        { Recibe_BDH: 0, Ingreso_Per_Capita_USD: 109.5, Jefe_Mujer: 0, Anios_Escolaridad: 12, Num_Hijos: 3, Area_Rural: 0, Puntaje_Registro_Social: 55 }
-      ];
-
-      const histogram = (values, bins = 20, min = 0, max = 1) => {
-        const width = (max - min) / bins;
-        const counts = Array(bins).fill(0);
-        values.forEach(v => {
-          const index = Math.min(bins - 1, Math.max(0, Math.floor((v - min) / width)));
-          counts[index] += 1;
-        });
-        return counts.map((count, i) => ({ x: min + width * (i + 0.5), y: count / values.length }));
-      };
-
       const loadData = async () => {
-        try {
-          const response = await fetch('datos_reales_psm.json');
-          if (!response.ok) {
-            throw new Error('No se pudo cargar el archivo de datos JSON.');
-          }
-          const data = await response.json();
-          return data.filter(row => row.Recibe_BDH !== null && row.Ingreso_Per_Capita_USD !== null);
-        } catch (error) {
-          console.warn('No se pudo cargar datos desde JSON. Usando datos de respaldo embebidos.', error);
-          return fallbackData;
+        const response = await fetch('datos_reales_psm.json');
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el archivo de datos JSON.');
         }
+        const data = await response.json();
+
+        if (!data.support_common || !data.income_comparison) {
+          throw new Error('El archivo JSON no contiene las métricas esperadas: support_common o income_comparison.');
+        }
+
+        return data;
       };
 
       const renderCharts = async () => {
-        const rawData = await loadData();
-        const X = buildDesignMatrix(rawData);
-        const y = rawData.map(row => row.Recibe_BDH);
-        const beta = fitLogit(X, y, 800, 0.2);
-        rawData.forEach(row => {
-          row.propensity_score = computePropensity(row, beta);
-        });
+        const data = await loadData();
 
-        const treated = rawData.filter(row => row.Recibe_BDH === 1);
-        const controls = rawData.filter(row => row.Recibe_BDH === 0);
-        const matched = nearestNeighborMatch(treated, controls);
-
-        const treatedScores = treated.map(r => r.propensity_score);
-        const controlScores = controls.map(r => r.propensity_score);
-        const treatedHist = histogram(treatedScores, 20);
-        const controlHist = histogram(controlScores, 20);
-
-        // Use fixed labels and realistic overlapping distributions for visualization
-        const fixedLabels = ['0.05', '0.15', '0.25', '0.35', '0.45', '0.55', '0.65', '0.75', '0.85', '0.95'];
         new Chart(document.getElementById('psmDensityChart'), {
           type: 'line',
           data: {
-            labels: fixedLabels,
+            labels: data.support_common.labels,
             datasets: [
               {
                 label: 'Tratados',
-                data: [0.02, 0.08, 0.18, 0.35, 0.65, 0.88, 0.72, 0.45, 0.20, 0.05],
+                data: data.support_common.treated_density,
                 borderColor: '#2563eb',
                 backgroundColor: 'rgba(37, 99, 235, 0.15)',
                 fill: true,
@@ -189,7 +149,7 @@
               },
               {
                 label: 'Controles',
-                data: [0.30, 0.60, 0.85, 0.70, 0.50, 0.30, 0.15, 0.08, 0.03, 0.01],
+                data: data.support_common.control_density,
                 borderColor: '#16a34a',
                 backgroundColor: 'rgba(22, 163, 74, 0.12)',
                 fill: true,
@@ -208,15 +168,6 @@
           }
         });
 
-        const beforeIncome = {
-          treated: treated.reduce((sum, r) => sum + r.Ingreso_Per_Capita_USD, 0) / treated.length,
-          controls: controls.reduce((sum, r) => sum + r.Ingreso_Per_Capita_USD, 0) / controls.length
-        };
-        const afterIncome = {
-          treated: treated.reduce((sum, r) => sum + r.Ingreso_Per_Capita_USD, 0) / treated.length,
-          matchedControls: matched.reduce((sum, pair) => sum + pair.control.Ingreso_Per_Capita_USD, 0) / matched.length
-        };
-
         new Chart(document.getElementById('incomeComparisonChart'), {
           type: 'bar',
           data: {
@@ -224,20 +175,43 @@
             datasets: [
               {
                 label: 'Tratados',
-                // Valores solicitados por el usuario (USD)
-                data: [48.50, 63.80],
+                data: [data.income_comparison.treated_before, data.income_comparison.treated_after],
                 backgroundColor: '#2563eb',
                 borderRadius: 6
               },
               {
                 label: 'Contrafactual emparejado',
-                // Valores solicitados por el usuario (USD)
-                data: [112.00, 52.10],
+                data: [data.income_comparison.control_before, data.income_comparison.matched_control_after],
                 backgroundColor: '#16a34a',
                 borderRadius: 6
               }
             ]
           },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'top' },
+              title: { display: true, text: 'Comparación de ingresos antes y después del emparejamiento' },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)} USD`
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                min: 0,
+                max: 150,
+                title: { display: true, text: 'Ingreso per cápita (USD)' },
+                ticks: {
+                  callback: (value) => `${value}`
+                }
+              }
+            },
+            interaction: { mode: 'index', intersect: false }
+          }
+        });
           options: {
             responsive: true,
             plugins: {
